@@ -53,6 +53,7 @@ public class Grep extends Configured implements Tool {
 	@Override
 	public int run(String[] args) throws Exception {
 		Job job = Job.getInstance(getConf(), "GrepJob");
+		job.setCombinerClass(IntSumReducer.class);
 		Configuration conf = job.getConfiguration();
 		conf.set("searchString", args[2]);
 		job.setJarByClass(getClass());
