@@ -7,6 +7,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.lib.TotalOrderPartitioner;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -14,8 +15,11 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.partition.InputSampler;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+
+import com.sun.org.apache.xerces.internal.util.URI;
 
 
 public class Population extends Configured implements Tool {
@@ -73,8 +77,14 @@ public class Population extends Configured implements Tool {
 
 		//Configure the TotalOrderPartitioner here...
 
+		job.setPartitionerClass(TotalOrderPartitioner.class);
+		InputSampler.Sampler<Text, Text> sampler = new InputSampler.RandomSampler<Text, Text>(0.1,200, 3);
 
+		InputSampler.writePartitionFile(job, sampler);
 
+		String partitionFile = TotalOrderPartitioner.getPartitionFile(conf);
+		java.net.URI partionUri = new java.net.URI(partitionFile + "#" + TotalOrderPartitioner.DEFAULT_PATH);
+		job.addCacheFile(partionUri);
 		return job.waitForCompletion(true)?0:1;
 
 	}
